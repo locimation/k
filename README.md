@@ -5,12 +5,31 @@
 Using the K-Bridge plugin, this shared state can also be extended to other Q-SYS cores on the local network, via UDP multicast.
 
 ## Design
-Each Lua script maintains its own local state, which is a Lua table.
+The shared state is a Lua table, which can be updated by any Lua script running on the same core.
+Each Lua script maintains its own local copy of the shared state.
 
 Any Lua script can call `K.now(...)` with some fragment of state, to update the shared state.
 This fragment will be merged into the shared state, and any other Lua scripts will be notified of the change.
 
-A script that originates a fragment of the shared state will re-transmit it every ten seconds, in order to bring new or restarted scripts and cores up to date. If a more recent fragment is received from another script, the re-transmission is discontinued.
+A script that originates a fragment of the shared state will re-transmit it every ten seconds, in order to bring new or restarted scripts and cores up to date. If a more recent fragment is received from another script, the re-transmission of overlapping data is discontinued.
+
+## Example
+
+```lua
+
+require('locimation-k')
+
+K.init()
+
+K.on('foo', function(value)
+  print(value.bar)
+end)
+
+K.now({foo = { bar = 42}})
+-- or
+K.set('foo.bar', 42)
+
+```
 
 ## Methods
 
@@ -42,19 +61,3 @@ This function can also be used to unregister all callbacks for a given key, by p
 Link a control to a key in the shared state.
 The control will be updated with the value of the key, and will update the key when its value changes.
 For example: `K.link('foo', Controls.MyButton, 'Boolean')`.
-
-## Usage
-
-```lua
-
-require('locimation-k')
-
-K.init()
-
-K.on('foo', function(value)
-  print(value)
-end)
-
-K.now({foo = 42})
-
-```
