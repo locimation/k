@@ -1,0 +1,7 @@
+{
+    "version": "0.1.0",
+    "type": "LuaModule",
+    "author": "michael@locimation.com",
+    "description": "Shared-knowledge library for Q-SYS Systems",
+    "requiredVersion": "9.12"
+}

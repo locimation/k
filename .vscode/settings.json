@@ -1,0 +1,8 @@
+{
+  "Lua.diagnostics.globals": [
+    "Timer",
+    "Notifications",
+    "Crypto",
+    "bitstring"
+  ]
+}
