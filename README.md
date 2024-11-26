@@ -1,12 +1,15 @@
 # k
 
 **K** is a library for sharing state across multiple Lua scripts on a Q-SYS core.
+
 Using the K-Bridge plugin, this shared state can also be extended to other Q-SYS cores on the local network, via UDP multicast.
 
 ## Design
 Each Lua script maintains its own local state, which is a Lua table.
+
 Any Lua script can call `K.now(...)` with some fragment of state, to update the shared state.
 This fragment will be merged into the shared state, and any other Lua scripts will be notified of the change.
+
 A script that originates a fragment of the shared state will re-transmit it every ten seconds, in order to bring new or restarted scripts and cores up to date. If a more recent fragment is received from another script, the re-transmission is discontinued.
 
 ## Methods
