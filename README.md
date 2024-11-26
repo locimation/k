@@ -10,9 +10,13 @@ The shared state is a Lua table. Each Lua script maintains its own local copy of
 Any Lua script can call `K.now(...)` with some fragment of a Lua table, to update the shared state.
 This fragment will be merged into the shared state in all Lua scripts.
 
+### Synchronisation
 A script that originates a fragment of the shared state will re-transmit it every ten seconds, in order to bring new or restarted scripts and cores up to date. If a more recent fragment is received from another script, the re-transmission of overlapping data is discontinued.
 
-## Example
+For example, if script A calls `K.now({foo = 42})`, then every 10 seconds, script A will re-transmit `{foo = 42}`.
+If script B then calls `K.now({foo = 43})`, then script A will stop re-transmitting `{foo = 42}` and script B will begin re-transmitting `{foo = 43}`.
+
+## Usage Example
 
 ```lua
 
