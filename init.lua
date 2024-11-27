@@ -119,13 +119,15 @@ K =
     Notifications.Subscribe(
       "com.locimation.K",
       function(_, message)
-        if message.s == k_client_id then
-          return
-        end
-        if source_data then
-          source_clear(message.k)
-        end
-        push_k(merge(local_k, message.k))
+        Timer.CallAfter(function()
+          if message.s == k_client_id then
+            return
+          end
+          if source_data then
+            source_clear(message.k)
+          end
+          push_k(merge(local_k, message.k))
+        end, 0);
       end
     )
   end
