@@ -59,6 +59,7 @@ This callback will then be called whenever `K.now` is called with a fragment tha
 ### `K.off(key, callback)`
 Unregister a callback that was previously registered with `K.on`.
 This function can also be used to unregister all callbacks for a given key, by passing `nil` as the callback.
+It can also be used to unregister all callbacks for all keys, by passing `nil` as both arguments.
 
 ### `K.link(key, control, type)`
 Link a control to a key in the shared state.
