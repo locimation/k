@@ -154,6 +154,10 @@ K =
   end
 
   local function off(key, fn)
+    if not key then
+      callbacks = {}
+      return
+    end
     if not callbacks[key] then
       return
     end
