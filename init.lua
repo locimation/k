@@ -5,8 +5,31 @@ K =
 
   local k_client_id = bitstring.hexstream(Crypto.Digest("sha256", Crypto.GetRandomBytes(32)))
 
-  local function publish(diff)
-    Notifications.Publish("com.locimation.K", {k = diff, s = k_client_id})
+  local startup_time = Timer.Now()
+
+  local peers = {}
+
+  local function best_peer()
+    -- Remove peers from peers table that are no longer connected
+    -- Peers is a table of last-seen timestamps, indexed by peer ID
+    for peer_id, last_seen in pairs(peers) do
+      if Timer.Now() - last_seen > 15 then
+        peers[peer_id] = nil
+      end
+    end
+
+    -- Otherwise, return the peer with the most recent timestamp
+    local best_peer_id = k_client_id
+    for peer_id in pairs(peers) do
+      if peer_id > best_peer_id then
+        best_peer_id = peer_id
+      end
+    end
+    return best_peer_id
+  end
+
+  local function publish(diff, type)
+    Notifications.Publish("com.locimation.K", {k = diff, s = k_client_id, t = type})
   end
 
   _G._locimation_k_timer = Timer.New()
@@ -26,10 +49,17 @@ K =
   end
 
   _G._locimation_k_timer.EventHandler = function()
-    if not source_data then
-      return
+    if source_data then
+      publish(source_data, "refresh")
     end
-    publish(source_data)
+    if Timer.Now() - startup_time > 15 and best_peer() == k_client_id then
+      Timer.CallAfter(
+        function()
+          publish(local_k, "broadcast")
+        end,
+        math.random()
+      )
+    end
   end
 
   _G._locimation_k_timer:Start(10)
@@ -38,7 +68,7 @@ K =
     if not k or k == "" then
       return t
     end
-    local value = t;
+    local value = t
     for part in k:gmatch("([^.]+)") do
       value = value[part]
       if value == nil then
@@ -119,15 +149,23 @@ K =
     Notifications.Subscribe(
       "com.locimation.K",
       function(_, message)
-        Timer.CallAfter(function()
-          if message.s == k_client_id then
-            return
-          end
-          if source_data then
-            source_clear(message.k)
-          end
-          push_k(merge(local_k, message.k))
-        end, 0);
+        Timer.CallAfter(
+          function()
+            if message.s == k_client_id then
+              return
+            end
+            peers[message.s] = Timer.Now()
+            if message.t ~= "broadcast" and source_data then
+              source_clear(message.k)
+            end
+            local new_k = merge(local_k, message.k)
+            if message.t == "broadcast" and source_data then
+              new_k = merge(new_k, source_data)
+            end
+            push_k(new_k)
+          end,
+          0
+        )
       end
     )
   end
@@ -135,7 +173,7 @@ K =
   local function now(diff)
     source_data = merge(source_data or {}, diff)
     push_k(merge(local_k, diff))
-    publish(diff)
+    publish(diff, "new")
   end
 
   local function on(key, fn)
@@ -173,7 +211,7 @@ K =
   end
 
   local function set(str_key, value)
-    local parts = {};
+    local parts = {}
     for part in str_key:gmatch("([^.]+)") do
       table.insert(parts, 1, part)
     end
@@ -216,6 +254,6 @@ K =
     on = on,
     off = off,
     link = link,
-    get = get 
+    get = get
   }
 end)()
